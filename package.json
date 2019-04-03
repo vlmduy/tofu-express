@@ -1,0 +1,54 @@
+{
+  "name": "tofu-express",
+  "version": "1.0.0",
+  "author": "Andrew Abbott <andrew.abbott@dynagility.com>",
+  "license": "MIT",
+  "description": "Library for providing quick DynAgility standards compliant ExpressJS app with typescript annotations",
+  "files": [
+    "dist"
+  ],
+  "repository": "github:DynAgilityLLC/tofu-express",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run build-ts && npm run tslint",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@types/reflect-metadata": "^0.1.0",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.16.4",
+    "express-prom-bundle": "^5.0.2",
+    "isomorphic-fetch": "^2.2.1",
+    "morgan": "^1.9.1",
+    "prom-client": "^11.2.1",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.5",
+    "ts-jest": "^24.0.0",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.3333"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "./node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/test/**/*.test.(ts|js)"
+    ],
+    "testEnvironment": "node"
+  }
+}
