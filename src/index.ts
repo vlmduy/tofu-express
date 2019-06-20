@@ -13,10 +13,15 @@ import cookieparser from 'cookie-parser';
 
 const API_BINDING_METADATA_KEY = Symbol('API_BINDING');
 const CONTROLER_PATH_KEY = Symbol('CONTROLLER_PATH');
+const MIDDLEWARE = Symbol('MIDDLEWARE');
 type httpmethods = 'get' | 'post' | 'put' | 'delete' | 'patch';
 
 export function Controller(path: string): Function {
   return Reflect.metadata(CONTROLER_PATH_KEY, path);
+}
+
+export function Middleware(middleware: Function | Function[]): Function {
+  return Reflect.metadata(MIDDLEWARE, middleware);
 }
 
 function api(path: string, httpmethod: httpmethods, auth?: boolean) {
@@ -58,6 +63,16 @@ const catchErrors = <T>(apiHandler: (req, res) => T) => async function(req: Requ
   }
 };
 
+function createCallbackArray(middlewares: Function | Function[] | undefined, handler: Function) {
+  if (!middlewares) {
+    return [handler];
+  }
+  if (Array.isArray(middlewares)) {
+    return [...middlewares, handler];
+  }
+  return [middlewares, handler];
+}
+
 function getRouterfromDecorators(controller: any, ...middlewares) {
   const router = express.Router();
   middlewares.forEach((middleware) => router.use(middleware));
@@ -72,7 +87,9 @@ function getRouterfromDecorators(controller: any, ...middlewares) {
     if (decorator === undefined) {
       return false;
     }
-    router[decorator.httpmethod](decorator.path, catchErrors(controller[method].bind(controller)));
+
+    const middlewares = Reflect.getMetadata(MIDDLEWARE, controller, method);
+    router[decorator.httpmethod](decorator.path, ...createCallbackArray(middlewares, catchErrors(controller[method].bind(controller))));
     return true;
   });
   if (!props.some((i) => i)) {
@@ -113,7 +130,8 @@ export function InitializeExpress(port: number = PORT, name = 'ExpressJS', addit
       return;
     }
 
-    app.use(path, getRouterfromDecorators(instance));
+    const middlewares = Reflect.getMetadata(MIDDLEWARE, instance.constructor);
+    app.use(path, ...createCallbackArray(middlewares, getRouterfromDecorators(instance)));
   });
   app.listen(port, () => console.log(`${name} listening on port ${port}`));
   return app;
