@@ -61,7 +61,13 @@ const catchErrors = <T>(apiHandler: (req, res) => T) => async function(req: Requ
 function getRouterfromDecorators(controller: any, ...middlewares) {
   const router = express.Router();
   middlewares.forEach((middleware) => router.use(middleware));
-  const props = Object.getOwnPropertyNames(controller.constructor.prototype).map((method: string) => {
+  let target = controller;
+  let potentialProperties: string[] = [];
+  while (target !== null) {
+      potentialProperties = potentialProperties.concat(Object.getOwnPropertyNames(target));
+      target = Object.getPrototypeOf(target);
+  }
+  const props = potentialProperties.map((method: string) => {
     const decorator = Reflect.getMetadata(API_BINDING_METADATA_KEY, controller, method);
     if (decorator === undefined) {
       return false;
