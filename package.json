@@ -1,6 +1,6 @@
 {
   "name": "tofu-express",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Andrew Abbott <andrew.abbott@dynagility.com>",
   "license": "MIT",
   "description": "Library for providing quick DynAgility standards compliant ExpressJS app with typescript annotations",
