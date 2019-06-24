@@ -14,7 +14,24 @@ import cookieparser from 'cookie-parser';
 const API_BINDING_METADATA_KEY = Symbol('API_BINDING');
 const CONTROLER_PATH_KEY = Symbol('CONTROLLER_PATH');
 const MIDDLEWARE = Symbol('MIDDLEWARE');
+const NOTFOUND = Symbol('NOTFOUND');
+const CLIENTERROR = Symbol('CLIENTERROR');
 type httpmethods = 'get' | 'post' | 'put' | 'delete' | 'patch';
+
+export class NotFoundError extends Error {
+  public type: Symbol;
+  constructor() {
+    super();
+    this.type = NOTFOUND;
+  }
+}
+export class ClientError extends Error {
+  public type: Symbol;
+  constructor() {
+    super();
+    this.type = CLIENTERROR;
+  }
+}
 
 export function Controller(path: string): Function {
   return Reflect.metadata(CONTROLER_PATH_KEY, path);
@@ -57,9 +74,20 @@ const catchErrors = <T>(apiHandler: (req, res) => T) => async function(req: Requ
       res.sendStatus(200);
     }
   } catch (e) {
+    switch (e.type) {
+      case NOTFOUND:
+        res.statusCode = 404;
+        res.send({ error: 'Not Found' });
+        break;
+      case CLIENTERROR:
+        res.statusCode = 400;
+        res.send({ error: 'Malformed request'});
+        break;
+      default:
+        res.statusCode = 500;
+        res.send({ error: 'Internal Server Error' });
+    }
     console.log(`Received an error from handler ${apiHandler.name} : `, e);
-    res.statusCode = 500;
-    res.send({ error: 'Internal Server Error' });
   }
 };
 

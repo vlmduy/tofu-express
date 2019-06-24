@@ -1,4 +1,4 @@
-# ts-express
+# tofu-express
 
 A library of decorators to define class based "controller" classes.
 
