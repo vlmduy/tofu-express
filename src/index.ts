@@ -91,14 +91,15 @@ const catchErrors = <T>(apiHandler: (req, res) => T) => async function(req: Requ
   }
 };
 
-function createCallbackArray(middlewares: Function | Function[] | undefined, handler: Function) {
+function createCallbackArray(controller: any, middlewares: Function | Function[] | undefined, handler: Function) {
+  handler = catchErrors(handler.bind(controller));
   if (!middlewares) {
     return [handler];
   }
   if (Array.isArray(middlewares)) {
-    return [...middlewares, handler];
+    return [...middlewares.map((i) => i.bind(controller)), handler];
   }
-  return [middlewares, handler];
+  return [middlewares.bind(controller), handler];
 }
 
 function getRouterfromDecorators(controller: any, ...middlewares) {
@@ -117,7 +118,7 @@ function getRouterfromDecorators(controller: any, ...middlewares) {
     }
 
     const middlewares = Reflect.getMetadata(MIDDLEWARE, controller, method);
-    router[decorator.httpmethod](decorator.path, ...createCallbackArray(middlewares, catchErrors(controller[method].bind(controller))));
+    router[decorator.httpmethod](decorator.path, ...createCallbackArray(controller, middlewares, controller[method]));
     return true;
   });
   if (!props.some((i) => i)) {
@@ -159,7 +160,7 @@ export function InitializeExpress(port: number = PORT, name = 'ExpressJS', addit
     }
 
     const middlewares = Reflect.getMetadata(MIDDLEWARE, instance.constructor);
-    app.use(path, ...createCallbackArray(middlewares, getRouterfromDecorators(instance)));
+    app.use(path, ...createCallbackArray(instance, middlewares, getRouterfromDecorators(instance)));
   });
   app.listen(port, () => console.log(`${name} listening on port ${port}`));
   return app;
