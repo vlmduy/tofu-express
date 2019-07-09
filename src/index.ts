@@ -116,7 +116,13 @@ function getRouterfromDecorators(controller: any, ...middlewares) {
       return false;
     }
 
-    const middlewares = Reflect.getMetadata(MIDDLEWARE, controller, method);
+    let middlewares = Reflect.getMetadata(MIDDLEWARE, controller, method);
+    if (middlewares !== undefined) {
+      if (!Array.isArray(middlewares)) {
+        middlewares = [middlewares];
+      }
+      middlewares = middlewares.map((mw) => mw.bind(controller));
+    }
     router[decorator.httpmethod](decorator.path, ...createCallbackArray(middlewares, catchErrors(controller[method].bind(controller))));
     return true;
   });
@@ -157,8 +163,13 @@ export function InitializeExpress(port: number = PORT, name = 'ExpressJS', addit
       console.log(`Received controller ${instance.name} but did not have an @Controller annotation.`);
       return;
     }
-
-    const middlewares = Reflect.getMetadata(MIDDLEWARE, instance.constructor);
+    let middlewares = Reflect.getMetadata(MIDDLEWARE, instance.constructor);
+    if (middlewares !== undefined) {
+      if (!Array.isArray(middlewares)) {
+        middlewares = [middlewares];
+      }
+      middlewares = middlewares.map((mw) => mw.bind(instance));
+    }
     app.use(path, ...createCallbackArray(middlewares, getRouterfromDecorators(instance)));
   });
   app.listen(port, () => console.log(`${name} listening on port ${port}`));
