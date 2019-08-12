@@ -68,10 +68,12 @@ export function Patch(path: string, auth?: boolean) {
 const catchErrors = <T>(apiHandler: (req, res) => T) => async function(req: Request, res: Response) {
   try {
     const handlerValue: T = await apiHandler(req, res);
-    if (handlerValue !== undefined) {
-      res.send(handlerValue);
-    } else {
-      res.sendStatus(200);
+    if (!res.headersSent) {
+      if (handlerValue !== undefined) {
+          res.send(handlerValue);
+      } else {
+          res.sendStatus(200);
+      }
     }
   } catch (e) {
     switch (e.type) {
